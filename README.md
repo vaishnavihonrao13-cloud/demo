@@ -1,8 +1,8 @@
-This is a simple Todo application using \*\*Spring Boot + PostgreSQL + React\*\*.
+This is a simple Todo application using Spring Boot,PostgreSQL,React
 
 
 
-1\. To set Database 
+1. To set Database 
 
 1\. Install PostgreSQL.
 
