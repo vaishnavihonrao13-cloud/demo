@@ -1,11 +1,14 @@
 package com.example.demo.controller;
-
-import jakarta.validation.Valid;
-import org.springframework.web.bind.annotation.*;
-import java.util.List;
+import com.example.demo.exception.TodoNotFoundException;
 import com.example.demo.entity.Todo;
 import com.example.demo.repository.TodoRepository;
+import jakarta.validation.Valid;
+import org.springframework.http.ResponseEntity;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.annotation.*;
+import java.util.List;
 
+@CrossOrigin(origins = "http://localhost:3000")   // 🔥 For React connection
 @RestController
 @RequestMapping("/todos")
 public class TodoController {
@@ -16,41 +19,52 @@ public class TodoController {
         this.todoRepository = todoRepository;
     }
 
-        @GetMapping
-        public List<Todo> getAllTodos() {
-            return todoRepository.findAll();
-
+    @GetMapping
+    public ResponseEntity<List<Todo>> getAllTodos() {
+        return ResponseEntity.ok(todoRepository.findAll());
     }
 
     @GetMapping("/{id}")
-    public Todo getTodoById(@PathVariable Long id) {
-        return todoRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Todo not found"));
+    public ResponseEntity<Todo> getTodoById(@PathVariable Long id) {
 
+        Todo todo = todoRepository.findById(id)
+                .orElseThrow(() -> new TodoNotFoundException("Todo not found"));
+
+        return ResponseEntity.ok(todo);
     }
+
 
     @PostMapping
-    public Todo createTodo(@Valid @RequestBody Todo todo) {
-        return todoRepository.save(todo);
-    }
+    public ResponseEntity<Todo> createTodo(@Valid @RequestBody Todo todo) {
 
+        Todo savedTodo = todoRepository.save(todo);
+
+        return new ResponseEntity<>(savedTodo, HttpStatus.CREATED);
+    }
     @PutMapping("/{id}")
-    public Todo updateTodo(@PathVariable Long id, @Valid @RequestBody Todo updateTodo) {
+    public ResponseEntity<Todo> updateTodo(
+            @PathVariable Long id,
+            @Valid @RequestBody Todo updateTodo) {
+
         Todo todo = todoRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Todo not found"));
+                .orElseThrow(() -> new TodoNotFoundException("Todo not found"));
+
         todo.setTitle(updateTodo.getTitle());
         todo.setCompleted(updateTodo.getCompleted());
-        return todoRepository.save(todo);
 
+        return ResponseEntity.ok(todoRepository.save(todo));
     }
 
-    @DeleteMapping("/{id}")
-    public void deleteTodo(@PathVariable Long id) {
-        if (!todoRepository.existsById(id)){
-            throw new RuntimeException("Todo not found");
 
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteTodo(@PathVariable Long id) {
+
+        if (!todoRepository.existsById(id)) {
+            throw new TodoNotFoundException("Todo not found");
         }
+
         todoRepository.deleteById(id);
 
+        return ResponseEntity.noContent().build();
     }
 }
